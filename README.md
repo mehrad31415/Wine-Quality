@@ -19,5 +19,8 @@ On a more personal level, this data set was chosen because it is fit for the edu
 fraud detection." 3 and “Personal Key indicators of heart disease” 4 had around 300,000 data records. As the number of data records grows, the complexity of the methods and handling the data will become harder. Likewise, another interesting dataset was "Chest X-Ray Images (Pneumonia)." 5 However, the project requires applying neural networks in image classification; hence this option was discarded as well. To recapitulate, this project with around 6500 observations - in total - will be a good first step and allows focusing and applying the learned machine learning techniques (logistic regression, random decision trees, random forests). Another motivation was that this project accurately described what the data records and predictors represent. In many cases on the internet, there is a lack of description about what the data set represents. Last but not least, the usability of the final chosen data set has a high score (8.82).
 ### 4. Reference
 P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
-kaggle.com https://archive.ics.uci.edu/ml/datasets/wine+quality
+
+kaggle.com 
+
+https://archive.ics.uci.edu/ml/datasets/wine+quality
 The descriptions below are for the "First-version" folder, some of them hold true for the "Final-version" folder as well. When completed, I will update the Readme.md for the "Final-version" folder.
