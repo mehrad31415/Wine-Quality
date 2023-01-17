@@ -8,6 +8,7 @@ The *report* document is organized as follows: Section 1 presents the research q
 ### Research Question
 How precise can the quality of wine be predicted based on the following attributes: “fixed acidity”, “volatile acidity”, “citric acid”, “residual sugar”, “chlorides”, “free sulfur dioxide”, “total sulfur dioxide”, “density”, “pH”, “sulphates”, and “alcohol”?
 
+### Introduction
 The project aims to examine multiple machine learning models where the response is the quality of wine and the predictors are the mentioned variables. The goal is to find the best model for prediction and inference of the quality of wine. By doing so, certification entities, wine producers, and even consumers can benefit from such a model. For this aim, two data sets have been used:
 
 • The first data set is the “red.csv” data set which consists of “red wines”.
@@ -51,4 +52,4 @@ It is worth mentioning that wine certification is generally assessed by physicoc
 
 3. UCI Machine Learning Repository: Wine Quality Data Set. (n.d.).
 
-The descriptions below are for the "First-version" folder, some of them hold true for the "Final-version" folder as well. When completed, I will update the Readme.md for the "Final-version" folder.
+The descriptions are for the "First-version" folder, most of them hold true for the "Final-version" folder as well. When completed, I will update the readme.md for the "Final-version" folder. In brief, in the "Final-version" much more models will be tested; a draft of the report can be found in the folder. 
