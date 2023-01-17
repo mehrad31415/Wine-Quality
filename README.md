@@ -52,4 +52,5 @@ It is worth mentioning that wine certification is generally assessed by physicoc
 
 3. UCI Machine Learning Repository: Wine Quality Data Set. (n.d.).
 
-The descriptions are for the "First-version" folder, most of them hold true for the "Final-version" folder as well. When completed, I will update the readme.md for the "Final-version" folder. In brief, in the "Final-version" much more models will be tested; a draft of the report can be found in the folder. 
+### Note
+The descriptions are for the "First-version" folder, most of them hold true for the "Final-version" folder as well. When completed, I will update the readme.md for the "Final-version" folder. In brief, in the "Final-version" a comprehensive investigation will be done; a draft of the report can be found in the "Final-version" folder. 
