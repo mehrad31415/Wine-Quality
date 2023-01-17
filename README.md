@@ -3,28 +3,52 @@ This was the final project for the Machine Learning course.
 
 This is a work in progress. The "First-version" folder consists of the project which was handed in for the class. The "Final-version" is the final version which I intend to reach; however, there is still much work to be done.
 
-### 1. Project Aim
-The project aims to explore the applications of different machine learning techniques on the “winequality-red” and “winequality-white” datasets. These datasets were publicly donated on the 7th of October 2009 and are related to the red and white kinds of the Portuguese "Vinho Verde" wine. Both datasets can be found on the UCI (University of California, Irvine) repository 1 , and the red wine dataset is also available on "Kaggle." 2 For more details, consult the reference (Cortez, Cerdeira, Almeida, Matos, & J.Reis, 2009). In brief, the task is creating a model to classify the quality of a wine based on the given attributes. In other words, the datasets can be viewed as classification and regression problems. The intention is to initially use logistic regression and further examine more sophisticated models such as random decision trees & forests. Furthermore, selection methods will be used to see whether all input variables are relevant to the quality of the wine. As a final step, we will merge the two data sets and examine the differences between red and white wines.
-### 2. Dataset
-There are two different datasets; one is related to "red wine," and the other is related to "white wine." The "red wine" data set has 1600 observations, whereas the "white wine" data set has 4899 observations. However, in both data sets, there are eleven predictors: namely, "fixed acidity," "volatile acidity," "citric acid," "residual sugar," "chlorides," "free sulfur dioxide," "total sulfur dioxide," "density," "pH," "sulphates," and "alcohol." These input variables are achieved by physicochemical tests. The output variable, i.e., the one we intend to predict, is “quality," which is a score from one to ten. Note that the higher the score, the more quality the wine has.
+The *report* document is organized as follows: Section 1 presents the research question; in Section 2, the introduction, project aim, wine data sets, ML models, and variable selection approach is described; Section 3 contains a full detail of the ML techniques and analysis of the results; in Section 4 conclusion are made; finally, in Section 5 the references are given.
 
-It is important to note that due to privacy, the dataset does not include the following factors:
+### Research Question
+How precise can the quality of wine be predicted based on the following attributes: “fixed acidity”, “volatile acidity”, “citric acid”, “residual sugar”, “chlorides”, “free sulfur dioxide”, “total sulfur dioxide”, “density”, “pH”, “sulphates”, and “alcohol”?
 
-1- There is no data about grape types
+The project aims to examine multiple machine learning models where the response is the quality of wine and the predictors are the mentioned variables. The goal is to find the best model for prediction and inference of the quality of wine. By doing so, certification entities, wine producers, and even consumers can benefit from such a model. For this aim, two data sets have been used:
 
-2- There is no data about wine brand
+• The first data set is the “red.csv” data set which consists of “red wines”.
 
-3- There is no data about wine selling price
+• The second data set is the “white.csv” data set consisting of “white wines”.
 
-Ultimately, as seen in the data, the quality classes are not equally balanced. We obviously will have more normal wines than very poor or excellent wines.
-### 3. Motivation
-On a general level, the results of this project can be interesting to see what predictors affect the quality of the wine the most. The results on a larger scale can be used for marketing and business purposes.
-On a more personal level, this data set was chosen because it is fit for the educational purposes I intend to achieve. Accordingly, most data sets on "Kaggle" which were initially chosen, such as "credit card
-fraud detection." 3 and “Personal Key indicators of heart disease” 4 had around 300,000 data records. As the number of data records grows, the complexity of the methods and handling the data will become harder. This project with around 6500 observations - in total - will be a good first step and allows focusing and applying the learned machine learning techniques (logistic regression, random decision trees, random forests). Another motivation was that this project accurately described what the data records and predictors represent. In many cases on the internet, there is a lack of description about what the data set represents. Last but not least, the usability of the final chosen data set has a high score (8.82).
-### 4. Reference
-P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
+These data sets were publicly donated on the 7th of October 2009 and are the two most common variants, white and red (rosé is also produced), from the demarcated Portuguese region of vinho verde. Both have 12 columns; namely, fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulphates, alcohol, quality. The red wine data set has 1599 observations, whereas the white wine data set has 4898 observations. In the proposal it is written that the data sets contain 1600 rows and 4899 rows respectively. This is because the first row of the data sets are the names of each column. The data were collected from May of 2004 to February of 2007 using only protected designation of origin samples that were tested at the official certification entity (CVRVV). Moreover, this wine accounts for 15% of the total Portuguese production during that time, making this data set large compared to other data sets prepared in this domain. Both data sets can be found on the following website: UCI (University of California, Irvine), Center for Machine Learning & Intelligent Systems
 
-kaggle.com 
+In brief, the task is creating a model to predict the quality of a wine based on the given attributes. In other words, the data sets can be viewed as classification and regression problems. The intention is to answer the following questions:
 
-https://archive.ics.uci.edu/ml/datasets/wine+quality
+• *Feature selection:* Which attributes contribute the most to the quality of wine?
+– Selection methods will be used to see whether all input variables are relevant to the quality of the wine. Seeing the predictors, particularly, fixed acidity, volatile acidity, and citric acid, they seem
+to be correlated. Free sulfur dioxide and total sulfur dioxide seem to have a correlation as well. Likewise, we are not sure if all input variables are relevant. Therefore, it could be interesting to test feature selection methods.
+
+• *Prediction:* Which machine learning model will give better prediction for the quality of wine? 
+
+• *Inference:* Which model will given better intuition for predicting the quality of wine?
+
+To answer these questions, several machine learning models will be applied on the two data sets separately and the results will be compared to each other. We will also see how the models differ for white wine and red wine; specifically, are there any attributes that is more influential for the quality of red wine which is not for white wine (or vice versa)?
+
+The list below are the regression machine learning models applied on the data sets. 
+
+• multiple linear regression & subset selection linear regression (best subset, forward step-wise, backward step-wise, sequential step-wise)
+
+• regression decision trees & tree ensemble methods: bagging and random forests
+
+In addition, classification techniques will be applied on the data sets. Note that the quality of wine in both data sets is a quantitative variable with integer values ranging from 0 (poor quality) to 10 (excellent quality). However, these values can be treated in two ways: 1 - as continuous values in a regression problem or 2 - as eleven classes for a classification problem. Moreover, in order to apply classification techniques one can apply a threshold and categorize the wines based on their quality value. Treating quality as an ordinal value, the following methods will be applied.
+
+• logistic regression
+
+• classification decision trees & tree ensemble methods: bagging and random forests. 
+
+• support vector machines (SVM)
+
+It is worth mentioning that wine certification is generally assessed by physicochemical and sensory tests. Determination of density, alcohol or pH values, are some of the Physicochemical laboratory tests used for wine certification. With regards to sensory tests, they rely mainly on human experts (in this case, the median of evaluations made by at least 3 wine experts was taken for the quality score). However, it should be emphasized that the weakest sense among the five prominent human senses is taste. For detailed information on the *background* and *data sets*, please read the *references* and *proposal*.
+
+### References
+1. P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
+
+2. Kaggle: Your Machine Learning and Data Science Community. (n.d.).
+
+3. UCI Machine Learning Repository: Wine Quality Data Set. (n.d.).
+
 The descriptions below are for the "First-version" folder, some of them hold true for the "Final-version" folder as well. When completed, I will update the Readme.md for the "Final-version" folder.
