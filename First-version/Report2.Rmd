@@ -1,0 +1,583 @@
+---
+title: "Report"
+author: "Mehrad Haghshenas"
+date: "`r Sys.Date()`"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=12, fig.height=8, fig.path='Figs/',
+                      echo = FALSE, warning =FALSE, message = FALSE, collapse = TRUE)
+```
+
+<div style="text-align: justify">
+
+The document is organized as follows: Section 1 presents the research question; in Section 2, the introduction, project aim, wine data sets, ML models, and variable selection approach is described; Section 3 contains a full detail of the ML techniques and analysis of the results; in Section 4 conclusion are made; finally, in Section 5 the references are given.
+
+### Research Question
+
+**How precise can the quality of wine be predicted based on the following attributes: "fixed acidity", "volatile acidity", "citric acid", "residual sugar", "chlorides", "free sulfur dioxide", "total sulfur dioxide", "density", "pH", "sulphates", and "alcohol"?**
+
+### Introduction
+
+The project aims to examine multiple machine learning models where the response is the quality of wine and the predictors are the mentioned variables. The goal is to find the *best* model for prediction and inference of the quality of wine. By doing so, certification entities, wine producers, and even consumers can benefit from such a model. For this aim, two data sets have been used: 
+
+* The first data set is the "red.csv" data set which consists of "red wines".
+* The second data set is the "white.csv" data set consisting of "white wines".
+
+These data sets were publicly donated on the 7th of October 2009 and are the two most common variants, white and red (rosé is also produced), from the demarcated Portuguese region of vinho verde. Both have 12 columns; namely, *fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulphates, alcohol, quality.* The *red wine* data set has 1599 **observations**, whereas the *white wine* data set has 4898 **observations**. In the proposal it is written that the data sets contain 1600 rows and 4899 rows respectively. This is because the first row of the data sets are the names of each column. The data were collected from May of 2004 to February of 2007 using only protected designation of origin samples that were tested at the official certification entity (CVRVV). Moreover, this wine accounts for 15% of the total Portuguese production during that time, making this data set large compared to other data sets prepared in this domain. Both data sets can be found on the following website: [UCI (University of California, Irvine), Center for Machine Learning & Intelligent Systems](https://archive.ics.uci.edu/ml/datasets/wine+quality)
+
+
+In brief, the task is creating a model to predict the quality of a wine based on the given attributes. In other words, the data sets can be viewed as classification and regression problems. The intention is to answer the following questions:
+
+* *Feature selection*: Which attributes contribute the most to the quality of wine?
+  + Selection methods will be used to see whether all input variables are relevant to the quality of the wine. Seeing the predictors, particularly, *fixed acidity*, *volatile acidity*, and *citric acid*, they seem to be correlated. *Free sulfur dioxide* and *total sulfur dioxide* seem to have a correlation as well. Likewise, we are not sure if all input variables are relevant. Therefore, it could be interesting to test feature selection methods.
+* *Prediction*: Which machine learning model will give better prediction for the quality of wine?
+* *Inference*: Which model will given better intuition for predicting the quality of wine?
+
+To answer these questions, several machine learning models will be applied on the two data sets separately and the results will be compared to each other. We will also see how the models differ for white wine and red wine; specifically, are there any attributes that is more *influential* for the quality of red wine which is not for white wine (or vice versa)?
+
+The list below are the regression machine learning models applied on the data sets. The first one is a linear regression model. Moving on, in the second part, the model is a non-parametric non-linear model (trees). Although, they are less intuitive, they might have higher prediction accuracy. These assumptions will be tested however, with further analysis.
+
+* **multiple linear regression & subset selection linear regression (best subset, forward step-wise, backward step-wise, sequential step-wise)**
+* **regression decision trees & tree ensemble methods: bagging and random forests**
+
+In addition, classification techniques will be applied on the data sets. Note that the quality of wine in both data sets is a quantitative variable with integer values ranging from 0 (poor quality) to 10 (excellent quality). However, these values can be treated in two ways: 1 - as continuous values in a regression problem or 2 - as eleven classes for a classification problem. Moreover, in order to apply classification techniques one can apply a threshold and categorize the wines based on their *quality* value. Treating quality as an *ordinal value*, the following methods will be applied.
+
+* **logistic regression**
+* **classification decision trees & tree ensemble methods: bagging and random forests.**
+* **support vector machines (SVM)**
+
+It is worth mentioning that wine certification is generally assessed by physicochemical and sensory tests. Determination of density, alcohol or pH values, are some of the Physicochemical laboratory tests used for wine certification. With regards to sensory tests, they rely mainly on human experts (in this case, the *median* of evaluations made by at least 3 wine experts was taken for the quality score). However, it should be emphasized that the weakest sense among the five prominent human senses is *taste*. For detailed information on the *background* and *data sets*, please read the *references* and *proposal.* 
+
+### Machine Learning techniques
+In the next step, the machine learning algorithms will be applied on the data sets. In this section, any data wrangling, tidying, and visualization will be done as needed. At the end of the section, the models will be compared with each other and conclusions will be made.
+
+As the first step, we will read in the data sets.
+
+```{r}
+library (tidyverse)
+red   <- read_csv2("red.csv")
+white <- read_csv2("white.csv")
+```
+
+In the following, it can be seen that the *quality* variable has a normal distribution for the *red* and *white* data sets. In other words, there are more *normal* wine compared to excellent and very poor wine (as expected). For the *red* data set, the maximum quality is 8 and the minimum is 3. For the *white* data set, the maximum quality is 9 and the minimum is 3. Note that the *quality* variable can take any integer from a scale 0-10. 
+
+```{r}
+ggplot(data = red) +
+  geom_bar(mapping = aes(x = quality))
+```
+
+
+```{r}
+ggplot(data = white) +
+  geom_bar(mapping = aes(x = quality))
+```
+
+Moving on, we will see if the data sets contain any *not found* values. 
+
+```{r}
+sapply(red, function(x) sum(is.na(x)))
+```
+```{r}
+sapply(white, function(x) sum(is.na(x)))
+```
+As seen the white data set has no *NA* values where as in the red data set two *NA* values can be seen in the *total sulfur dioxide* column. The two data records containing a *null* value for the total sulfur dioxide column can be neglected given the large number of observations. In other words, when having 1600 observations, two observations can be excluded without any particular loss of information. So we exclude them from the red data set regardless of whether total sulfur dioxide is an influential predictor or not.
+
+```{r}
+red <- na.omit(red)
+```
+
+Furthermore, looking at the scale of the predictors they are not all on the same scale. As an example, this can be seen in variables *chlorides* and *fixed acidity*:
+
+```{r}
+min(red$chlorides)
+max(red$chlorides)
+min(red$`fixed acidity`)
+max(red$`fixed acidity`)
+```
+Hence, before applying any machine learning methods, we will feature scale the predictors. By doing so, our models will converge much faster. More importantly, the variables which have larger values do not impact the prediction more than the variables with smaller values. For feature scaling, *standardization* will be used. Before standardizing, all the values of the data set will be converted to numerical values (although all the values are already numerical, but some have been saved as *char* data type. So, further type casting is needed to convert them to numeric data types). Ultimately, take note that it is not needed to scale the response variable (unless you are dealing with very large responses like GPU linear algebra [Is It Necessary to Scale the Target Value in Addition to Scaling Features for Regression Analysis?, 2014](https://stats.stackexchange.com/questions/111467/is-it-necessary-to-scale-the-target-value-in-addition-to-scaling-features-for-re)). In our data set, the response is not large and thus will not be feature scaled. Having said that, it can be scaled if one wishes; nonetheless, in general, when applying feature scaling, the *interpretation* of the model becomes harder. Therefore, where there is no need, it is recommended to not feature scale.
+
+```{r}
+red <- as.tibble(sapply(red, as.numeric))
+white <- as.tibble(sapply(white, as.numeric))
+red <- cbind(scale(red[,-ncol(red)]),red[,ncol(red)])
+white <- cbind(scale(white[,-ncol(white)]),white[,ncol(white)])
+```
+
+If you look at the summary of the data set now, you can see that each variable has a mean and standard deviation of 0 and 1 respectively:
+
+```{r, echo = FALSE}
+summary (white)
+summary (red)
+```
+
+Upon standardizing the predictors, we will now run the pre-mentioned machine learning models in order:
+
+##### multiple linear regression
+
+The first step will be to identify whether there is a relationship between the response and predictors? In other words, are the predictors at all related to the response or not. In this situation, the *null hypothesis* will be that all coefficients are zero. The *alternative hypothesis* will be that at least one of the coefficients (not including the intercept) in the multiple linear regression model is non-zero. To answer this question, F-statistic will be used.
+
+multiple linear regression model for red wine data set:
+
+```{r}
+library (ISLR2)
+mlr_red <- lm (quality ~ ., data = red)
+summary (mlr_red)
+
+```
+
+multiple linear regression model for white wine data set:
+
+```{r}
+mlr_white <- lm (quality ~ ., data = white)
+summary (mlr_white)
+```
+
+As seen, the F-statistic (57.35) for the red data set and the F-statistic for the white data set (143.4) are much larger than 1 indicating that indeed there *might* be at least one predictor related to the response, *quality*. However, to conform this statement, we use the p-value; which indicates the probability that the F-statistic is higher than 57.35 (for red wine) when all coefficients are zero. If this probability is lower than the significance level (normally defined as 0.05) then it shows that there is under 5 percent chance that the F-statistic will be higher than 57.35 when all coefficients are zero. Thus, this will indicate that the F-statistic is large enough and that the null-hypothesis can be rejected in favor of the alternative hypothesis. In this case, the p-value for both data sets is approximately 0, hence, indicating that the F-statistics are sufficiently large and that the null hypothesis can be rejected. In other words, we can conclude that there is a correlation between the response and at least one predictor in both data sets (red wine and white wine). One might wonder why weren't the p-values for the t-tests between each predictor and the response used. It is worth mentioning that the p-values for each predictor are obtained using a t-test for the *simple linear regression* which is a model with that particular predictor and the response. The t-value is calculated by dividing the predicted coefficient (slope) for that predictor by the *standard error* of that coefficient ^ [Interestingly, the squared of the t-value is equal to the F-statistics of the multiple regression model when omitting that particular response.]. Whether the t-value is large enough or not will be indicated by whether its p-value is lower than 0.05 or not. If lower, then one can conclude that the predictor and the response are correlated. This might seem logical, but the logic might be flawed especially in *high dimensional data* where the number of predictors are a lot. The reason being is that when having many predictors then the probability of having at least one with p-value under 0.05 increases. In fact, if we have 100 predictors then we expect to see approximately five small p-values even in the absence of any true association between the predictors and the response. However, F-statistics does not suffer from this issue so for concluding for whether there is at least one predictor related to the response F-statistic has been used.
+
+Now that we know that there is at least one predictor which is correlated to the response, we want to find out which predictor(s) hold this correlation. In other words, in this step we will do *feature selection*. Another question arises that why not pick all the predictors even the ones that are less correlated. Correspondingly, one might think that even including the predictors with weaker correlation will result in a more precise and comprehensive model for prediction. This is a naive assumption to make given that it is true that including more predictors will reduce the *training mean squared of errors (MSE)*; but, what is important to us is the *test mean squared of errors (MSE)*. Accordingly, we care about how well our model can perform on unforeseen data because the main goal of machine learning is to build models that can be used for future prediction. There is no point in building a model that only performs well on the trained data set. By applying feature selection, we can reduce the dimensions of the model, leading to lower variance and a more *generalized* model which would not *over fit* the data. Note that if all variables are of importance, in the process of feature selection no features will be discarded. 
+
+There are multiple feature selection methods, probably the best (as the name says) is the *best subset selection* method. Below is the best subset selection for the red wine data set:
+
+```{r}
+library(leaps)
+regfit.full_red <- regsubsets(quality ~ ., red, nvmax = 11, method = "exhaustive")
+summary (regfit.full_red)
+```
+
+This is the best subset selection for the white wine data set:
+
+```{r}
+regfit.full_white <- regsubsets(quality ~ ., white, nvmax = 11, method = "exhaustive")
+summary (regfit.full_white)
+```
+
+Above, the results for the best subset selection approach can be seen. Other feature selection methods are forward step-wise selection (a greedy approach), backward step-wise selection (does not work on high dimensional data), and hybrid selection (combination of both forward and backward step wise). All these approaches compared to *best subset selection* are less precise. However, when there is a large number of predictors the best subset selection method is computationally expensive and we must use an alternative approach. Nonetheless, given that the wine data set is fairly small, using best subset selection is recommended. It is worth mentioning that the *best subset selection* method takes in all the combinations of predictors and creates a multiple linear regression model for each one. In detail, it first creates all the models with one predictor, calculates the *RSS (Residual Sum of Squares)* for each model and gives out the model with one predictor with the least RSS. In this case, the model for the red wine only contains the *volatile acidity* variable and for white wine contains the *density* variable. Furthermore, it creates all the models with two predictors, calculates the RSS for each one and gives out the model with two predictors with the least RSS. In the red wine case, it consists of *volatile acidity* and *density*. This process will be repeated and in general if the data has $p$ predictors the approach will create $2^p$ models. Ultimately, we will have $p$ models containing one variable, two predictors, three predictors, ...., $p$ predictors. Having $p$ $(11)$ models with different number of predictors, the previous methods of finding the best model by using the maximum $R^2$ (or minimum $RSS$) cannot be used. The main reason is that when adding a feature to the model the $RSS$ will consistently decrease; thus, $RSS$ and $R^2$ are not suitable for selecting the best model among a collection of models with different numbers of predictors. Should we use $RSS$ we will always get the model with the most number of predictors. With this regard, to compare models with different number of predictors other approaches are used. The four main approaches are: AIC, BIC, Mallows $C_p$, Adjusted $R^2$. Although they have different formula, they all have the same reasoning behind them: if a predictor is added to a model, whether the model has improved or not is indicated by a variable which consists of two terms: 1) the *RSS* which will obviously decrease. 2) a *penalty term* which adds a penalty with every added predictor. Therefore, a model will improve only if the the decrease in RSS is significant enough to compensate for the addition in the penalty term, resulting in an overall decrease. Note that for least regression AIC and $C_p$ are proportional so only one will be displayed.
+
+The below charts indicate the mentioned appraoches for the red wine data set:
+
+```{r}
+par(mfrow = c(2, 2))
+reg.summary_red <- summary (regfit.full_red)
+plot(reg.summary_red$cp, xlab = "Number of Variables for red wine", ylab = "Cp", type = "l")
+points(which.min(reg.summary_red$cp), reg.summary_red$cp[which.min(reg.summary_red$cp)], col = "red", cex = 2,
+pch = 20)
+
+
+plot(reg.summary_red$bic, xlab = "Number of Variables for red wine", ylab = "BIC", type = "l")
+points(which.min(reg.summary_red$bic), reg.summary_red$bic[which.min(reg.summary_red$bic)], col = "red", cex = 2,
+pch = 20)
+
+plot(reg.summary_red$adjr2, xlab = "Number of Variables for red wine", ylab = "adjr2", type = "l")
+points(which.min(reg.summary_red$adjr2), reg.summary_red$adjr2[which.min(reg.summary_red$adjr2)], col = "red", cex = 2,
+pch = 20)
+```
+
+The below charts indicate the mentioned appraoches for the white wine data set:
+
+```{r}
+par(mfrow = c(2, 2))
+reg.summary_white <- summary (regfit.full_white)
+plot(reg.summary_white$cp, xlab = "Number of Variables for white wine", ylab = "Cp", type = "l")
+points(which.min(reg.summary_white$cp), reg.summary_white$cp[which.min(reg.summary_white$cp)], col = "red", cex = 2,
+pch = 20)
+
+
+plot(reg.summary_white$bic, xlab = "Number of Variables for white wine", ylab = "BIC", type = "l")
+points(which.min(reg.summary_white$bic), reg.summary_white$bic[which.min(reg.summary_white$bic)], col = "red", cex = 2,
+pch = 20)
+
+plot(reg.summary_white$adjr2, xlab = "Number of Variables for white wine", ylab = "adjr2", type = "l")
+points(which.min(reg.summary_white$adjr2), reg.summary_white$adjr2[which.min(reg.summary_white$adjr2)], col = "red", cex = 2,
+pch = 20)
+```
+
+
+*red wine:* As seen the three approaches have given different results. Particularly, the $C_p$ approach has indicated that the best model has 9 variables. For $BIC$ the predicted number of variables is 7 and for *adjusted R* it is 1 variable. The adjusted R approach, though being logical, does not have a strong theoretical background to support the method compared to BIC and $C_p$. Moreover, if one looks at the formula of $BIC$ and $C_p$, $BIC$ penalizes the model more when having more predictors compared to $C_P$. Specifically, $BIC$ has a penalty term multiplied by $log(n)$ but $C_p$ has a penalty term with 2 as the coefficient. Thus, it is reasonable that the $BIC$ method has given less predictors for the final model. In general researchers prefer the result obtained from $BIC$ as it gives the $TRUE$ model [(Is There Any Reason to Prefer the AIC or BIC Over the Other?, 2010)](https://stats.stackexchange.com/questions/577/is-there-any-reason-to-prefer-the-aic-or-bic-over-the-other).
+
+*white wine*: 8, 5, and 1 predictors were estimated from $C_P$, $BIC$, and $adjr2$ respectively. 
+
+For further examination 10 fold cross-validation will be used ^[bootstrapping can also be examined]. The advantage cross-validation has over $BIC$, $C_p$, and $adjr2$, is that it does not make any assumptions about the data. 
+
+```{r}
+k <- 10
+n <- nrow(red)
+set.seed(11)
+folds <- sample(rep(1:k, length = n))
+cv.errors <- matrix(data = NA, nrow = k, ncol = 11, dimnames = list(NULL, paste(1:11)))
+
+predict.regsubsets <- function(object, newdata, id, ...) {
+  form <- as.formula(object$call[[2]]) 
+  mat <- model.matrix(form, newdata)
+  coefi <- coef(object, id = id)
+  xvars <- names(coefi)
+  mat[, xvars] %*% coefi
+  }
+
+
+for (j in 1:k) {
+  best.fit <- regsubsets(quality ~ .,
+        data = red[folds != j, ],
+        nvmax = 11) 
+  for (i in 1:11) {
+        pred <- predict(best.fit, red[folds == j, ], id = i)
+        cv.errors[j, i] <-mean((red$quality[folds == j] - pred)^2)
+  }
+}
+mean.cv.errors <- apply(cv.errors, 2, mean)
+plot(mean.cv.errors, type = "b")
+```
+
+```{r}
+mean.cv.errors
+```
+
+Further down for the white wine data set:
+
+```{r}
+k <- 10
+n <- nrow(white)
+set.seed(11)
+folds <- sample(rep(1:k, length = n))
+cv.errors <- matrix(data = NA, nrow = k, ncol = 11, dimnames = list(NULL, paste(1:11)))
+
+for (j in 1:k) {
+  best.fit <- regsubsets(quality ~ .,
+        data = white[folds != j, ],
+        nvmax = 11) 
+  for (i in 1:11) {
+        pred <- predict(best.fit, white[folds == j, ], id = i)
+        cv.errors[j, i] <-mean((white$quality[folds == j] - pred)^2)
+  }
+}
+mean.cv.errors <- apply(cv.errors, 2, mean)
+plot(mean.cv.errors, type = "b")
+```
+
+```{r}
+mean.cv.errors
+```
+
+As seen, in the 10-fold cross validation approach, the model with 7 predictors is the *best* (has the lowest *test MSE*) for the red wine and the model with 4 predictors is the best for white wine. The result for red wine is similar to the result obtained from *BIC*. Specifically, the variables *volatile acidity*, *citric acid*, *chlorides*, *free sulfur dioxide*, *total sulfur dioxide*, *density*, and *sulphates* are included in the model. If we refer to the summary of the multiple linear regression model created at the beginning, we can see that the *p-values* for the seven mentioned predictors are much smaller than the other predictors. Particularly, the initial summary already gave us the correct set of predictors, however, not always based on p-values can the best set of predictors be easily picked. For example the result from the cross validation approach for the white wine data gives 4 predictors where as looking at the p-values of the t-tests there are 7 predictors with significant values. Moreover, the result is not exactly like $BIC$ given that $BIC$ gives 5 predictors but cross validation approach has given 4 predictors. However, looking more closely at BIC graph for white wine, the model with 4 and 5 predictors have roughly the same value. Specifically, the variables *volatile acidity*, *residual sugar*, *density*, and *sulphates* are included in the model for white wine. From here on the machine learning techniques are applied in order. They are only applied for the *red wine* data set. However, the same can be done for the *white wine* data set as well following the same procedure as below. 
+
+```{r}
+library (boot)
+set.seed(11)
+
+cv.error.10 <- rep (0,10)
+for (i in 1:10) {
+  mlr <- glm (quality ~ ., data = red)
+  cv.error.10[i] <- cv.glm (red, mlr, K=10)$delta[1]
+}
+print ("mean of test MSE from 10 fold cross validation is :")
+mean (cv.error.10)
+
+mlr <- lm (quality ~ ., data = red)
+print ("training MSE for model with 11 predictors is: ")
+mean(summary (mlr)$residuals^2)
+
+mlr2 <- lm (quality ~ `volatile acidity` + `citric acid` + `chlorides` + `free sulfur dioxide` + `total sulfur dioxide` + density + sulphates, data = red)
+print ("training MSE for model with 7 predictors is: ")
+mean(summary (mlr2)$residuals^2)
+```
+
+Comparing this model (which has 7 predictors) with the initial multiple linear regression model (having 11 predictors), the **training MSE** are 0.4689199 and 0.4664348 respectively. This indicates that the new model has a much lower variance with the cost of a little bias. In other words, in the bias-variance trade off, the model has significantly improved and has a better performance. This can easily be seen with the cross-validation approach where the **test MSE** of the model with 7 predictors ($0.4763889$) is roughly 0.002 lower than the **test MSE** of the model with 11 predictors ($0.4785797$). Note that simple models are preferred over complex models if they give the same prediction accuracy. This is because these models do not over fit the data and can be inferred much easier. With regards to this statement, it is said that in the cross-validation approach for the best subset feature selection, it is better to select the smallest model for which the estimated test MSE is within one standard error of the smallest test MSE. The rationale here is that if a set of models appear to be more or less equally good, then we might as well just choose the simplest model, which is the one with the smallest number of predictors (James et al., 2022). Accordingly, we see that the model with 5 predictors will be chosen. The model with 5 predictors consists of the following variables: *volatile acidity*, *chlorides*, *total sulfur dioxide*, *density*, *sulphates*. Note that for the *white* wine data set, even considering this approach the model will remain the same with four predictors.
+
+```{r}
+mean.cv.errors[mean.cv.errors <= min(mean.cv.errors) + sd(mean.cv.errors)]
+```
+
+However, lets further see the *training MSE* of this model and compare it to the model with 7 predictors.
+
+```{r}
+mlr3 <- lm (quality ~ `volatile acidity` + `chlorides` + `total sulfur dioxide` + density + sulphates, data = red)
+print ("training MSE for model with 5 predictors is: ")
+mean(summary (mlr3)$residuals^2)
+```
+
+The *training MSE* is 0.13 higher than the corresponding value for the model with 11 predictors. At this point choosing between the model with 11 predictors and 7 predictors depends on the **purpose** of the model. If the model is used for **inference** then the model with 5 variables should be picked. If the model is used for **accurate prediction** then the model with 7 variables should be chosen. In general, personally, *I would choose the model with 5 predictors given the decent accuracy rate it has over the test data set.* 
+
+##### regression decision trees & tree ensemble methods: bagging and random forests.
+
+Now we have the five important predictors which are related to the response. Furthermore, we will expand on our linear regression model by adding non-linearity. Specifically, in this part, tree based methods will be applied which are non-linear and non-parametric methods. For this purpose, the *tree* library in *r* is used. Given that the *tree* function is sensitive on the names of the columns, they are changed to contain no spaces. If this was not done, an error would be recieved when calling the *tree* function.
+
+```{r}
+red <- red %>%
+  rename ( fixed = `fixed acidity`,
+           volatile = `volatile acidity`,
+           citric = `citric acid`,
+           sugar = `residual sugar`,
+           free = `free sulfur dioxide`,
+           total = `total sulfur dioxide`,
+           
+    
+  ) 
+```
+
+Further on, we create a train data set consisting of 80% of the observations ^ [normally in cross validation the data set is divided into 80-20 or 75-25 for train and test data sets]. As seen, when fitted the tree, the *Residual mean deviance* will be 0.4111. Compared to the *training mean squared of errors* for the multiple linear regression model (0.4664348), this shows that at least the the model is performing better on the trained data set. However, the test MSE is important to us.
+
+```{r}
+library (tree)
+set.seed(11)
+train <- sample(1:nrow(red), 4 * nrow(red) / 5)
+tree.red <- tree(formula = red$quality ~ ., data = red, subset = train) 
+summary(tree.red)
+```
+
+The tree is plotted in the following. It is seen that the most decisive predictor is *alcohol*. This is different from the result obtained from multiple linear regression. Specifically, in the later approach combined with best subset selection *alcohol* was only chosen as the eighth variable for the model. 
+
+```{r}
+plot (tree.red)
+text(tree.red, pretty = 0)
+```
+
+Running a K-fold cross-validation experiment shows that pruning the tree to be of size 5 will indeed result into a better model. 
+
+```{r}
+cv.red <- cv.tree(tree.red)
+plot(cv.red$size, cv.red$dev, type = "b")
+```
+
+```{r}
+prune.red <- prune.tree(tree.red, best = 5) 
+plot(prune.red)
+text(prune.red, pretty = 0)
+```
+
+Particularly, in this pruned tree, the predictors *volatile acidity*, *sulphates*, and *alcohol* are used for classification. As seen below, 0.5878 is the *test MSE* for the tree. Even though the training MSE for the tree was lower compared to linear regression, the *test MSE* is very high. This shows that the tree-based approach has over fit the data.
+
+```{r}
+yhat <- predict(tree.red, newdata = red[-train, ])
+red.test <- red[-train,]
+mean((yhat - red.test$quality)^2, na.rm = TRUE)
+
+
+```
+
+Moving on, we use ensemble approaches to combine single trees in order to get a better machine learning algorithm. The first ensemble approach is *bagging*. 
+
+```{r}
+library (randomForest)
+set.seed(11)
+rf.red <- randomForest(quality ~ ., data = red,
+subset = train, mtry = 11, importance = TRUE)
+yhat.rf <- predict(rf.red, newdata = red[-train, ])
+mean((yhat.rf - red.test$quality)^2)
+```
+
+As seen the *test MSE* has dramatically decreased compared to using only a single tree and also using a multiple linear regression method. In below, *random forests* have been used which is the same as above, instead in *bagging* all predictors (11) will be used whereas in random forest roughly 1/3 of the predictors (4) will be used.
+
+```{r}
+library (randomForest)
+set.seed(11)
+rf.red <- randomForest(quality ~ ., data = red,
+subset = train, mtry = 4, importance = TRUE)
+yhat.rf <- predict(rf.red, newdata = red[-train, ])
+mean((yhat.rf - red.test$quality)^2)
+```
+
+Again we see a slight decrease in the test MSE compared to bagging. Overall, the following regression machine learning approaches have been applied: 1) multiple linear regression 2) best subset linear regression 3) decision tree 4) bagging 5) random forest. *Best subset linear regression* is the best for inference, but random forest has the lowest *test MSE* and thus, is better for prediction. Addmitedly, given that it is non-linear and non-parametric it is not very useful for inference. 
+
+##### logistic regression
+
+In this section, we will apply logistic regression for the classification of the *quality* variable. As mentioned, this variable holds integer values, but the values can be treated as classes as well. Specifically, for the *red* data set there can be six classes as there are only six distinctive values for quality.
+
+```{r}
+red %>% 
+  distinct (quality)
+```
+
+First step, by changing the *class* of the *quality* variable, we will convert it to a *qualitative* variable. 
+
+```{r}
+red <- red %>% 
+  mutate (quality = as.factor(quality))
+```
+
+
+After creating the qualitative variable, we will fit the logistic regression model. To do so, the *red wine* data set has been separated to two data sets- training data and test data. More often that not, this partition is done with a ratio of 80% to 20%. Moreover, the multinomial logestic regression model has been trained on the training data and predictions were made on the test data. This process has been done for 10 times and the mean of the model accuracy which is the proportion of test data observations classified correctly has been shown. The reason this has been done for 10 times is that randomly dividing the data set comes with variability. Therefore, the process is repeated and the mean of the accuracy are calculated so to decrease the variability. As seen, roughly 58.069% of the test data sets were classified correctly (when run for the training data set, the model classifies 56.963% of the training data observations correctly). 
+
+```{r}
+library (caret)
+library (nnet)
+set.seed(11)
+
+acc <- rep (0,10)
+for (i in 1:10){
+  training.samples <- red$quality %>% 
+  createDataPartition(p = 0.8, list = FALSE)
+  train.data  <- red[training.samples, ]
+  test.data <- red[-training.samples, ]
+  # Fit the model
+  model <- multinom(quality ~., data = train.data)
+  # Make predictions
+  predicted.classes <- model %>% predict(train.data)
+  # Model accuracy
+  acc[i] <- mean(predicted.classes == train.data$quality)
+}
+mean (acc)
+```
+
+However, the question rises that does the model have a high prediction accuracy or is it predicting correctly by chance. This question especially becomes important when looking at the number of observations at each class in the bar charts at the beginning of the report. As seen, they are not equally divided and thus a model only predicting 5 and 6 will also have a good predictive accuracy for the red wine data set.
+
+The below confusion matrix has been drawn. As seen many observations in the test data set have been mis-classified. Specifically, no observation in class 4 or 8 has been classified correctly. There are lots of errors in classes 5 6 and 7 as well.
+
+```{r}
+confusionMatrix(predict (model, test.data), test.data$quality,
+                mode = "everything",
+                positive="1")
+
+```
+
+Now we will repeat the process this time with only the five variables which had the most correlation with the response, *quality*. As seen below, the accuracy rate for the test data is 55.089%. This is just under the corresponding percentage for 11 predictors. Thus, with only a bit increase in bias we have much lower variance when using these 5 predictors. However, in general the multinomial logistic regression does not perform well on the data set and has a lot of errors. For example, the *F1-statistic* (which uses precision and recall) for no predictor exceeds 62%. 
+
+```{r}
+library (caret)
+library (nnet)
+set.seed(11)
+
+acc <- rep (0,10)
+for (i in 1:10){
+  training.samples <- red$quality %>% 
+  createDataPartition(p = 0.8, list = FALSE)
+  train.data  <- red[training.samples, ]
+  test.data <- red[-training.samples, ]
+  # Fit the model
+  model <- multinom(quality ~ volatile + chlorides + total + density + sulphates, data = train.data)
+  # Make predictions
+  predicted.classes <- model %>% predict(train.data)
+  # Model accuracy
+  acc[i] <- mean(predicted.classes == train.data$quality)
+}
+mean (acc)
+```
+
+
+##### classification decision trees & tree ensemble methods: bagging and random forests.
+
+The first naive approach where all predictors are used is like the following. Just like regression decision trees, *alcohol* is the *root* variable. 
+```{r}
+tree.red2 <- tree(quality ~ . , red)
+plot (tree.red2)
+text (tree.red2, pretty = 0)
+```
+
+The accuracy of such a model on the *test data set* is 0.4844 which is lower than the corresponding value in the multinomial logistic regression. Even the accuracy for the training data is lower (0.5043). 
+
+
+```{r}
+set.seed(11)
+train <- sample(1:nrow(red), 4 *nrow(red) / 5)
+red.test <- red[-train, ]
+tree.red <- tree(quality ~ ., red,
+subset = train)
+tree.pred <- predict(tree.red, red.test,
+type = "class")
+confusionMatrix(tree.pred, red.test$quality,
+                mode = "everything",
+                positive="1")
+
+```
+
+Moving on, we use ensemble approaches to combine single trees in order to get a better machine learning algorithm. The first ensemble approach is *bagging*. 
+
+```{r}
+library (randomForest)
+set.seed(11)
+rf.red <- randomForest(quality ~ ., data = red,
+subset = train, mtry = 11, importance = TRUE)
+yhat.rf <- predict(rf.red, newdata = red[-train, ], type = "class")
+confusionMatrix(yhat.rf, red.test$quality,
+                mode = "everything",
+                positive="1")
+```
+
+As seen the *test prediction accuracy* has dramatically increased compared to using only a single tree and also compared to multiple linear regression methods. Particularly, it is 0.675 which is much larger than the accuracy for a single decxision tree. In below, *random forests* have been used which is the same as above, instead in *bagging* all predictors (11) will be used whereas in random forest roughly 1/3 of the predictors (4) will be used.
+
+```{r}
+set.seed(11)
+rf.red <- randomForest(quality ~ ., data = red,
+subset = train, mtry = 4, importance = TRUE)
+yhat.rf <- predict(rf.red, newdata = red[-train, ], type = "class")
+confusionMatrix(yhat.rf, red.test$quality,
+                mode = "everything",
+                positive="1")
+```
+
+Again a slight increase in the test accuracy prediction is seen in the *random forest* method (just like regression) with 68.75% prediction accuracy.
+
+##### support vector machines (SVM) -- linear & polynomial & radial
+
+In the last subsection we will run an SVM algorithm first with a *linear kernel*, followed by a *polynomial kernel* and finally a *radial kernel*. It is worth metnioning that the cost has been defined as 10 through trial and error this value has approved sufficient. However, a more systematic way might be to do cross validation. 
+
+
+```{r}
+library (e1071)
+out <- svm(quality ~ ., data = red[train,], kernel = "linear", cost = 10)
+summary (out)
+```
+```{r}
+confusionMatrix(out$fitted, red[train,]$quality)
+```
+
+With regards to SVM with a *linear* kernel, the accuracy for classifying the training data based on quality is 0.563. This number for the test data set is 0.5344. 
+
+```{r}
+yhat.rf <- predict(out, newdata = red[-train, ], type = "class")
+
+confusionMatrix(yhat.rf, red.test$quality,
+                mode = "everything",
+                positive="1")
+```
+
+```{r}
+out <- svm(quality ~ ., data = red[train,], kernel = "polynomial", cost = 10)
+summary (out)
+
+confusionMatrix(out$fitted, red[train,]$quality)
+
+yhat.rf <- predict(out, newdata = red[-train, ], type = "class")
+
+confusionMatrix(yhat.rf, red.test$quality,
+                mode = "everything",
+                positive="1")
+```
+With regards to SVM with a *polynomial* kernel, the accuracy for classifying the training data based on quality is 0.6891 This number for the test data set is 0.5031. These values indicate that the model overfits the data.
+
+Ultimately, below SVM with a *radial* kernel can be seen:
+
+```{r}
+out <- svm(quality ~ ., data = red[train,], kernel = "radial", cost = 10)
+summary (out)
+
+confusionMatrix(out$fitted, red[train,]$quality)
+
+yhat.rf <- predict(out, newdata = red[-train, ], type = "class")
+
+confusionMatrix(yhat.rf, red.test$quality,
+                mode = "everything",
+                positive="1")
+```
+
+
+
+### Conclusions
+* the main attributes correlated to the *quality* of *white wine* are *volatile acidity*, *residual sugar*, *density*, and *sulphates*.
+* the main attributes correlated to the *quality* of *red wine* are  *volatile acidity*, *chlorides*, *total sulfur dioxide*, *density*, and *sulphates*.
+* *density*, *sulphates*, and *volatile acidity* are the main attributes which are correlated to the quality of both wines.
+* Among the regression models used in this project, the multiple linear regression with 5 predictors has a reasonable prediction accuracy and is best used for *inference*.
+* Among the regression models, the *random forests* is the best model for prediction.
+* Should the quality be treated as a qualitative variable, again using *random forest* has proved to give a better accuracy compared to other approaches with roughly 6. This is contrary to the finding to the article Modeling wine preferences by data mining from physicochemical properties where the authors found *SVM* superior.
+
+### References
+1. P. Cortez, A. Cerdeira, F. Almeida, T. Matos and J. Reis. Modeling wine preferences by data mining from physicochemical properties. In Decision Support Systems, Elsevier, 47(4):547-553, 2009.
+2. [Kaggle: Your Machine Learning and Data Science Community. (n.d.).](https://www.kaggle.com/)
+3. [UCI Machine Learning Repository: Wine Quality Data Set. (n.d.).](https://archive.ics.uci.edu/ml/datasets/wine+quality)
+
+
+##### Final note
+There can be much more detailed analysis done on the data set (like applying reinforcement learning, KNN, and neural networks (NN)), but we will stop at this point. 
+</div>
