@@ -9,9 +9,13 @@ The project aims to explore the applications of different machine learning techn
 There are two different datasets; one is related to "red wine," and the other is related to "white wine." The "red wine" data set has 1600 observations, whereas the "white wine" data set has 4899 observations. However, in both data sets, there are eleven predictors: namely, "fixed acidity," "volatile acidity," "citric acid," "residual sugar," "chlorides," "free sulfur dioxide," "total sulfur dioxide," "density," "pH," "sulphates," and "alcohol." These input variables are achieved by physicochemical tests. The output variable, i.e., the one we intend to predict, is “quality," which is a score from one to ten. Note that the higher the score, the more quality the wine has.
 
 It is important to note that due to privacy, the dataset does not include the following factors:
+
 1- There is no data about grape types
+
 2- There is no data about wine brand
+
 3- There is no data about wine selling price
+
 Ultimately, as seen in the data, the quality classes are not equally balanced. We obviously will have more normal wines than very poor or excellent wines.
 ### 3. Motivation
 On a general level, the results of this project can be interesting to see what predictors affect the quality of the wine the most. The results on a larger scale can be used for marketing and business purposes.
